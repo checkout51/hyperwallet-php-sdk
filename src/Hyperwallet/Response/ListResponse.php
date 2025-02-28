@@ -13,6 +13,13 @@ class ListResponse implements \Countable , \ArrayAccess{
      *
      * @var int
      */
+    private $count;
+
+    /**
+     * Total number of matching objects in single page
+     *
+     * @var int
+     */
     private $limit;
 
     /**
@@ -56,11 +63,27 @@ class ListResponse implements \Countable , \ArrayAccess{
             $this->limit = 0 ;
             $this->data = array();
         } else {
-            $this->hasNextPage = $body['hasNextPage'];
-            $this->hasPreviousPage = $body['hasPreviousPage'];
+            $hasNextPage = false;
+            $hasPreviousPage = false;
+
+            // backwards compatibility for v3 vs. v4 pagination
+            if (isset($body['count'])) {
+                $this->count = $body['count'];
+                $offset = $body['offset'] ?? 0;
+                $limit = $body['limit'] ?? 0;
+
+                $hasNextPage = ($body['count'] > ($offset * $limit));
+                $hasPreviousPage = ($offset > 0);
+            }
+
+            $this->hasNextPage = $body['hasNextPage'] ?? $hasNextPage;
+            $this->hasPreviousPage = $body['hasPreviousPage'] ?? $hasPreviousPage;
             $this->limit = $body['limit'];
             $this->links = $body['links'];
             $this->data = array_map(function ($item) use ($convertEntry) {
+                if (isset($item['links'])) {
+                    unset($item['links']);
+                }
                 return $convertEntry($item);
             }, $body['data']);
         }
