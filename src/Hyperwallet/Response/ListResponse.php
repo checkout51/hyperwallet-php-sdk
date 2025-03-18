@@ -151,7 +151,7 @@ class ListResponse implements \Countable , \ArrayAccess{
      */
     #[\ReturnTypeWillChange]
     public function count() {
-        return count($this->data);
+        return $this->count ?? count($this->data);
     }
     /**
      * @internal
