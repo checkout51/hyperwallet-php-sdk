@@ -1991,8 +1991,7 @@ class Hyperwallet {
             throw new HyperwalletArgumentException('profileType is required!');
         }
 
-        $body = $this->client->doGet('/rest/{version}/transfer-method-configurations', array(), array(
-            'version' => $this->version,
+        $body = $this->client->doGet('/rest/{version}/transfer-method-configurations', array('version' => $this->version), array(
             'userToken' => $userToken,
             'country' => $country,
             'currency' => $currency,
