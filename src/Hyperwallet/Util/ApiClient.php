@@ -52,6 +52,13 @@ class ApiClient {
     private $isEncrypted = false;
 
     /**
+     * The throttling service for Hyperwallet client's API request limits
+     *
+     * @var HyperwalletThrottling
+     */
+    private $throttling = null;
+
+    /**
      * Creates a instance of the API client
      *
      * @param string $username The API username
@@ -165,6 +172,7 @@ class ApiClient {
                 }
             }
             $response = $this->client->request($method, $uri->expand($url, $urlParams), $options);
+            $this->throttling = new HyperwalletThrottling($response->getHeaders());
             if ($response->getStatusCode() === 204) {
                 return array();
             }
@@ -182,14 +190,27 @@ class ApiClient {
             )));
             throw new HyperwalletApiException($errorResponse, $e);
         } catch (BadResponseException $e) {
-            $body = \GuzzleHttp\json_decode($e->getResponse()->getBody(), true);
-            if (is_null($body) || !isset($body['errors']) || empty($body['errors'])) {
+            if ($e->getResponse()->getStatusCode() == 429) {
+                $this->throttling = new HyperwalletThrottling($e->getResponse()->getHeaders());
+
                 $body = array('errors' => array(
                     array(
-                        'message' => 'Failed to get any error message from response',
-                        'code' => 'BAD_REQUEST'
+                        'message' => 'The request was rate limited',
+                        'code' => 'RATE_LIMITED'
                     )
                 ));
+            } else {
+                $body = \GuzzleHttp\json_decode($e->getResponse()->getBody(), true);
+                if (is_null($body) || !isset($body['errors']) || empty($body['errors'])) {
+                    $body = array(
+                        'errors' => array(
+                            array(
+                                'message' => 'Failed to get any error message from response',
+                                'code' => 'BAD_REQUEST'
+                            )
+                        )
+                    );
+                }
             }
             $errorResponse = new ErrorResponse($e->getResponse()->getStatusCode(), $body);
             throw new HyperwalletApiException($errorResponse, $e);
@@ -224,5 +245,13 @@ class ApiClient {
      */
     public function putMultipartData($partialUrl, array $uriParams, array $options) {
         return $this->doRequest('PUT', $partialUrl, $uriParams, $options);
+    }
+
+    /**
+     * @return HyperwalletThrottling|null
+     */
+    public function getThrottling()
+    {
+        return $this->throttling ?: new HyperwalletThrottling();
     }
 }

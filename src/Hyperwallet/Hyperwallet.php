@@ -93,6 +93,14 @@ class Hyperwallet {
     }
 
     //--------------------------------------
+    // Throttling
+    //--------------------------------------
+    public function getThrottling()
+    {
+        return $this->client->getThrottling();
+    }
+
+    //--------------------------------------
     // Helpers
     //--------------------------------------
 
