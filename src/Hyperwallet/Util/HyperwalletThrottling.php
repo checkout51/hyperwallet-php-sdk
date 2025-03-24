@@ -60,6 +60,16 @@ class HyperwalletThrottling
     }
 
     /**
+     * Get the unix timestamp representing when the rate limit window will reset
+     *
+     * @return int
+     */
+    public function getRateLimitReset()
+    {
+        return $this->rateLimitReset;
+    }
+
+    /**
      * Determine the amount of time remaining before next rate limit window reset
      *
      * @return int
