@@ -81,9 +81,6 @@ class ListResponse implements \Countable , \ArrayAccess{
             $this->limit = $body['limit'];
             $this->links = $body['links'];
             $this->data = array_map(function ($item) use ($convertEntry) {
-                if (isset($item['links'])) {
-                    unset($item['links']);
-                }
                 return $convertEntry($item);
             }, $body['data']);
         }
