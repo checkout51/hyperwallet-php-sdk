@@ -36,9 +36,9 @@ class HyperwalletThrottling
 
     private function parseResponseHeaders(array $responseHeaders = [])
     {
-        $this->rateLimit = $responseHeaders['X-Rate-Limit'][0] ?? 0;
-        $this->rateLimitRemaining = $responseHeaders['X-Rate-Limit-Remaining'][0] ?? 0;
-        $this->rateLimitReset = $responseHeaders['X-Rate-Limit-Reset'][0] ?? 0;
+        $this->rateLimit = isset($responseHeaders['X-Rate-Limit'][0]) ? (int)$responseHeaders['X-Rate-Limit'][0] : 0;
+        $this->rateLimitRemaining = isset($responseHeaders['X-Rate-Limit-Remaining'][0]) ? (int)$responseHeaders['X-Rate-Limit-Remaining'][0] : 0;
+        $this->rateLimitReset = isset($responseHeaders['X-Rate-Limit-Reset'][0]) ? (int)$responseHeaders['X-Rate-Limit-Reset'][0] : 0;
     }
 
     /**
