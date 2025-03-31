@@ -76,7 +76,7 @@ class HyperwalletThrottling
      */
     public function getSecondsToNextRateLimitReset()
     {
-        return $this->rateLimitReset > 0 ? max(time() - $this->rateLimitReset, 0) : 0;
+        return $this->rateLimitReset > 0 ? max($this->rateLimitReset - time(), 0) : 0;
     }
 
 }

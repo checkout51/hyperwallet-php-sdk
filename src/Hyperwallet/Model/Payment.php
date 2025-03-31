@@ -13,6 +13,7 @@ namespace Hyperwallet\Model;
  * @property string $currency The payment currency
  *
  * @property string $description The payment description
+ * @property string $notes The payment notes
  * @property string $memo The payment memo
  * @property string $purpose The payment purpose
  * @property \DateTime $releaseOn The payment release date
@@ -193,6 +194,26 @@ class Payment extends BaseModel implements IProgramAware {
      */
     public function setMemo($memo) {
         $this->memo = $memo;
+        return $this;
+    }
+
+    /**
+     * Get the payment notes
+     *
+     * @return string
+     */
+    public function getNotes() {
+        return $this->notes;
+    }
+
+    /**
+     * Set the payment notes
+     *
+     * @param string $notes
+     * @return Payment
+     */
+    public function setNotes($notes) {
+        $this->notes = $notes;
         return $this;
     }
 
