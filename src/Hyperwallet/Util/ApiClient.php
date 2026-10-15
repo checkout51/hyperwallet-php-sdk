@@ -178,8 +178,9 @@ class ApiClient {
                     )
                 ));
             } else {
-                $body = self::jsonDecode($e->getResponse()->getBody());
-                if (is_null($body) || !isset($body['errors']) || empty($body['errors'])) {
+                // Error bodies may not be JSON (e.g. an HTML page from a proxy), so fall back rather than throw
+                $body = json_decode((string) $e->getResponse()->getBody(), true);
+                if (!is_array($body) || !isset($body['errors']) || empty($body['errors'])) {
                     $body = array(
                         'errors' => array(
                             array(

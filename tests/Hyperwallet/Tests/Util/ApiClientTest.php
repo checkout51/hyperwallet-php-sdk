@@ -836,6 +836,42 @@ class ApiClientTest extends \PHPUnit\Framework\TestCase {
         }
     }
 
+    public function testDoGet_throw_exception_bad_request_with_non_json_response() {
+        // Setup data
+        $mockHandler = new MockHandler(array(
+            new Response(502, array('Content-Type' => 'text/html'), '<html><body>502 Bad Gateway</body></html>')
+        ));
+        $this->createApiClient($mockHandler);
+
+        // Execute test
+        try {
+            $this->apiClient->doGet('/test', array(), array());
+            $this->fail('HyperwalletApiException expected');
+        } catch (HyperwalletApiException $e) {
+            $this->assertEquals('Failed to get any error message from response', $e->getMessage());
+            $this->assertEquals(502, $e->getErrorResponse()->getStatusCode());
+            $this->assertEquals('BAD_REQUEST', $e->getErrorResponse()->getErrors()[0]->getCode());
+        }
+    }
+
+    public function testDoGet_throw_exception_bad_request_with_empty_body() {
+        // Setup data
+        $mockHandler = new MockHandler(array(
+            new Response(500, array(), '')
+        ));
+        $this->createApiClient($mockHandler);
+
+        // Execute test
+        try {
+            $this->apiClient->doGet('/test', array(), array());
+            $this->fail('HyperwalletApiException expected');
+        } catch (HyperwalletApiException $e) {
+            $this->assertEquals('Failed to get any error message from response', $e->getMessage());
+            $this->assertEquals(500, $e->getErrorResponse()->getStatusCode());
+            $this->assertEquals('BAD_REQUEST', $e->getErrorResponse()->getErrors()[0]->getCode());
+        }
+    }
+
 
     private function validateRequest($method, $path, $query, array $body, $hasContentType, array $headers = array()) {
         // Validate api request
