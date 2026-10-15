@@ -55,7 +55,6 @@
 			<url><loc>Hyperwallet.Response.ErrorResponse.html</loc></url>
 			<url><loc>Hyperwallet.Response.ListResponse.html</loc></url>
 			<url><loc>Hyperwallet.Util.ApiClient.html</loc></url>
-			<url><loc>Hyperwallet.Util.HyperwalletEncryption.html</loc></url>
 			<url><loc>Hyperwallet.Util.HyperwalletThrottling.html</loc></url>
 			<url><loc>Hyperwallet.Util.HyperwalletUriTemplate.html</loc></url>
 			<url><loc>Hyperwallet.Util.HyperwalletUUID.html</loc></url>
@@ -103,7 +102,6 @@
 			<url><loc>source-Hyperwallet.Response.ErrorResponse.html</loc></url>
 			<url><loc>source-Hyperwallet.Response.ListResponse.html</loc></url>
 			<url><loc>source-Hyperwallet.Util.ApiClient.html</loc></url>
-			<url><loc>source-Hyperwallet.Util.HyperwalletEncryption.html</loc></url>
 			<url><loc>source-Hyperwallet.Util.HyperwalletThrottling.html</loc></url>
 			<url><loc>source-Hyperwallet.Util.HyperwalletUUID.html</loc></url>
 			<url><loc>source-Hyperwallet.Util.HyperwalletUriTemplate.html</loc></url>
