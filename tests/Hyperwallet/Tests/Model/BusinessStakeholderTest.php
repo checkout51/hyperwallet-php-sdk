@@ -2,72 +2,66 @@
 namespace Hyperwallet\Tests\Model;
 
 use Hyperwallet\Model\BusinessStakeholder;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 class BusinessStakeholderTest extends ModelTestCase {
 
-    protected function getModelName() {
+    protected static function getModelName() {
         return 'BusinessStakeholder';
     }
 
     /**
-     * @dataProvider ignoredPropertiesProvider
-     *
      * @param string $property The property to look for
      */
+    #[DataProvider('ignoredPropertiesProvider')]
     public function testGettersForIgnoredProperties($property) {
         $this->performGettersForIgnoredPropertiesTest($property);
     }
 
     /**
-     * @dataProvider notIgnoredPropertiesProvider
-     *
      * @param string $property The property to look for
      */
+    #[DataProvider('notIgnoredPropertiesProvider')]
     public function testGettersAndSettersForNotIgnoredProperties($property) {
         $this->performGettersAndSettersForNotIgnoredPropertiesTest($property);
     }
 
     /**
-     * @dataProvider propertiesProvider
-     *
      * @param string $property The property to look for
      */
+    #[DataProvider('propertiesProvider')]
     public function testGetterReturnValueIsSet($property) {
         $this->performGetterReturnValueIsSetTest($property);
     }
 
     /**
-     * @dataProvider propertiesProvider
-     *
      * @param string $property The property to look for
      */
+    #[DataProvider('propertiesProvider')]
     public function testGetterReturnValueIsNotSet($property) {
         $this->performGetterReturnValueIsNotSetTest($property);
     }
 
     /**
-     * @dataProvider notIgnoredPropertiesProvider
-     *
      * @param string $property The property to look for
      */
+    #[DataProvider('notIgnoredPropertiesProvider')]
     public function testGetterAndSetterReturnValueIsSetIfValueIsProvidedAndDefaultIsSet($property) {
         $this->performGetterAndSetterReturnValueIsSetIfValueIsProvidedAndDefaultIsSetTest($property);
     }
 
     /**
-     * @dataProvider notIgnoredPropertiesProvider
-     *
      * @param string $property The property to look for
      */
+    #[DataProvider('notIgnoredPropertiesProvider')]
     public function testGetterAndSetterReturnValueIsSetIfValueIsProvidedAndDefaultIsNotSet($property) {
         $this->performGetterAndSetterReturnValueIsSetIfValueIsProvidedAndDefaultIsNotSetTest($property);
     }
 
     /**
-     * @dataProvider notIgnoredPropertiesProvider
-     *
      * @param string $property The property to look for
      */
+    #[DataProvider('notIgnoredPropertiesProvider')]
     public function testGetterAndSetterNullField($property) {
         $this->performGetterAndSetterNullFieldTest($property);
     }

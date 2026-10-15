@@ -23,11 +23,9 @@ abstract class ModelTestCase extends \PHPUnit\Framework\TestCase {
      */
     private $ignoredProperties;
 
-    protected abstract function getModelName();
+    protected abstract static function getModelName();
 
-    public function __construct($name = null, array $data = [], $dataName = '')
-    {
-        parent::__construct($name, $data, $dataName);
+    protected function setUp(): void {
         $this->init();
     }
 
@@ -277,25 +275,25 @@ abstract class ModelTestCase extends \PHPUnit\Framework\TestCase {
         $this->assertEquals($newVal, $getter->invoke($instance));
     }
 
-    public function propertiesProvider() {
-        $this->init();
-        return array_reduce($this->properties, function ($result, $property) {
-            $result[$property] = array($property);
-            return $result;
-        }, array());
+    public static function propertiesProvider() {
+        return self::toDataSet(self::findAllProperties(self::getModelClass()));
     }
 
-    public function ignoredPropertiesProvider() {
-        $this->init();
-        return array_reduce($this->ignoredProperties, function ($result, $property) {
-            $result[$property] = array($property);
-            return $result;
-        }, array());
+    public static function ignoredPropertiesProvider() {
+        return self::toDataSet(self::findAllIgnoredProperties(self::getModelClass()));
     }
 
-    public function notIgnoredPropertiesProvider() {
-        $this->init();
-        return array_reduce(array_diff($this->properties, $this->ignoredProperties), function ($result, $property) {
+    public static function notIgnoredPropertiesProvider() {
+        $clazz = self::getModelClass();
+        return self::toDataSet(array_diff(self::findAllProperties($clazz), self::findAllIgnoredProperties($clazz)));
+    }
+
+    private static function getModelClass() {
+        return new \ReflectionClass('Hyperwallet\Model\\' . static::getModelName());
+    }
+
+    private static function toDataSet(array $properties) {
+        return array_reduce($properties, function ($result, $property) {
             $result[$property] = array($property);
             return $result;
         }, array());
@@ -303,7 +301,7 @@ abstract class ModelTestCase extends \PHPUnit\Framework\TestCase {
 
     private function init() {
         // Find class
-        $this->clazz = new \ReflectionClass('Hyperwallet\Model\\' . $this->getModelName());
+        $this->clazz = self::getModelClass();
 
         // Find all properties based on annotation
         $this->properties = self::findAllProperties($this->clazz);
@@ -347,7 +345,6 @@ abstract class ModelTestCase extends \PHPUnit\Framework\TestCase {
     private static function findAllIgnoredProperties(\ReflectionClass $clazz) {
         try {
             $property = $clazz->getProperty('READ_ONLY_FIELDS');
-            $property->setAccessible(true);
             return $property->getValue($clazz->newInstance());
         } catch (\ReflectionException $e) {
             return array();

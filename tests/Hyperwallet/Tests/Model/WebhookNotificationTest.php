@@ -14,47 +14,44 @@ use Hyperwallet\Model\TransferRefund;
 use Hyperwallet\Model\User;
 use Hyperwallet\Model\VenmoAccount;
 use Hyperwallet\Model\WebhookNotification;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 class WebhookNotificationTest extends ModelTestCase {
 
-    protected function getModelName() {
+    protected static function getModelName() {
         return 'WebhookNotification';
     }
 
     /**
-     * @dataProvider ignoredPropertiesProvider
-     *
      * @param string $property The property to look for
      */
+    #[DataProvider('ignoredPropertiesProvider')]
     public function testGettersForIgnoredProperties($property) {
         $this->performGettersForIgnoredPropertiesTest($property);
     }
 
     /**
-     * @dataProvider propertiesProvider
-     *
      * @param string $property The property to look for
      */
+    #[DataProvider('propertiesProvider')]
     public function testGetterReturnValueIsSet($property) {
         $this->performGetterReturnValueIsSetTest($property);
     }
 
     /**
-     * @dataProvider propertiesProvider
-     *
      * @param string $property The property to look for
      */
+    #[DataProvider('propertiesProvider')]
     public function testGetterReturnValueIsNotSet($property) {
         $this->performGetterReturnValueIsNotSetTest($property);
     }
 
     /**
-     * @dataProvider notificationTypeProvider
-     *
      * @param string $type The notification type
      * @param object $clazz The expected class type
      *
      */
+    #[DataProvider('notificationTypeProvider')]
     public function testConstructorObjectConversion($type, $clazz) {
         $data = array(
             'type' => $type,
@@ -77,7 +74,7 @@ class WebhookNotificationTest extends ModelTestCase {
         }
     }
 
-    public function notificationTypeProvider() {
+    public static function notificationTypeProvider() {
         return array(
             'USERS.CREATED' => array('USERS.CREATED', User::class),
             'USERS.UPDATED.STATUS.ACTIVATED' => array('USERS.UPDATED.STATUS.ACTIVATED', User::class),

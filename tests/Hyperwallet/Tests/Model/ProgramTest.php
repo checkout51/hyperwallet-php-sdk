@@ -1,35 +1,34 @@
 <?php
 namespace Hyperwallet\Tests\Model;
 
+use PHPUnit\Framework\Attributes\DataProvider;
+
 class ProgramTest extends ModelTestCase {
 
-    protected function getModelName() {
+    protected static function getModelName() {
         return 'Program';
     }
 
     /**
-     * @dataProvider ignoredPropertiesProvider
-     *
      * @param string $property The property to look for
      */
+    #[DataProvider('ignoredPropertiesProvider')]
     public function testGettersForIgnoredProperties($property) {
         $this->performGettersForIgnoredPropertiesTest($property);
     }
 
     /**
-     * @dataProvider propertiesProvider
-     *
      * @param string $property The property to look for
      */
+    #[DataProvider('propertiesProvider')]
     public function testGetterReturnValueIsSet($property) {
         $this->performGetterReturnValueIsSetTest($property);
     }
 
     /**
-     * @dataProvider propertiesProvider
-     *
      * @param string $property The property to look for
      */
+    #[DataProvider('propertiesProvider')]
     public function testGetterReturnValueIsNotSet($property) {
         $this->performGetterReturnValueIsNotSetTest($property);
     }
