@@ -2,11 +2,12 @@
 namespace Hyperwallet\Util;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\BadResponseException;
-use GuzzleHttp\Exception\ConnectException;
+use GuzzleHttp\Exception\InvalidArgumentException;
 use Hyperwallet\Exception\HyperwalletApiException;
 use Hyperwallet\Exception\HyperwalletException;
 use Hyperwallet\Model\BaseModel;
 use Hyperwallet\Response\ErrorResponse;
+use Psr\Http\Client\NetworkExceptionInterface;
 use Psr\Http\Message\ResponseInterface;
 
 /**
@@ -102,7 +103,7 @@ class ApiClient {
     public function doPost($partialUrl, array $uriParams, ?BaseModel $data = null, array $query = array(), array $headers = array()) {
        return $this->doRequest('POST', $partialUrl, $uriParams, array(
             'query' => $query,
-            'body' => $data ? \GuzzleHttp\json_encode($data->getPropertiesForCreate(), JSON_FORCE_OBJECT) : '{}',
+            'body' => $data ? self::jsonEncode($data->getPropertiesForCreate()) : '{}',
             'headers' => array_merge($headers, array(
                 'Content-Type' => 'application/json'
             ))
@@ -123,7 +124,7 @@ class ApiClient {
     public function doPut($partialUrl, array $uriParams, BaseModel $data, array $query) {
         return $this->doRequest('PUT', $partialUrl, $uriParams, array(
             'query' => $query,
-            'body' => \GuzzleHttp\json_encode($data->getPropertiesForUpdate(), JSON_FORCE_OBJECT),
+            'body' => self::jsonEncode($data->getPropertiesForUpdate()),
             'headers' => array(
                 'Content-Type' => 'application/json'
             )
@@ -161,7 +162,7 @@ class ApiClient {
         try {
             $uri = new HyperwalletUriTemplate();
             if (!isset($options['headers'])) {
-                $options[] = array('headers' => array());
+                $options['headers'] = array();
             }
             $options['headers']['Accept'] = 'application/json';
             if ($this->isEncrypted) {
@@ -177,11 +178,11 @@ class ApiClient {
                 return array();
             }
             $this->checkResponseHeaderContentType($response);
-            $body = $this->isEncrypted ? \GuzzleHttp\json_decode(\GuzzleHttp\json_encode($this->encryption->decrypt($response->getBody())), true) :
-                \GuzzleHttp\json_decode($response->getBody(), true);
+            $body = $this->isEncrypted ? self::jsonDecode(json_encode($this->encryption->decrypt($response->getBody()))) :
+                self::jsonDecode($response->getBody());
 
             return $body;
-        } catch (ConnectException $e) {
+        } catch (NetworkExceptionInterface $e) {
             $errorResponse = new ErrorResponse(0, array('errors' => array(
                 array(
                     'message' => 'Could not communicate with ' . $this->client->getConfig('base_uri'),
@@ -200,7 +201,7 @@ class ApiClient {
                     )
                 ));
             } else {
-                $body = \GuzzleHttp\json_decode($e->getResponse()->getBody(), true);
+                $body = self::jsonDecode($e->getResponse()->getBody());
                 if (is_null($body) || !isset($body['errors']) || empty($body['errors'])) {
                     $body = array(
                         'errors' => array(
@@ -245,6 +246,38 @@ class ApiClient {
      */
     public function putMultipartData($partialUrl, array $uriParams, array $options) {
         return $this->doRequest('PUT', $partialUrl, $uriParams, $options);
+    }
+
+    /**
+     * Encode request data as a JSON object
+     *
+     * @param array $data The data to encode
+     * @return string
+     *
+     * @throws InvalidArgumentException
+     */
+    private static function jsonEncode(array $data) {
+        try {
+            return json_encode($data, JSON_FORCE_OBJECT | JSON_THROW_ON_ERROR);
+        } catch (\JsonException $e) {
+            throw new InvalidArgumentException('json_encode error: ' . $e->getMessage(), 0, $e);
+        }
+    }
+
+    /**
+     * Decode a JSON response body into an associative array
+     *
+     * @param string $json The JSON to decode
+     * @return mixed
+     *
+     * @throws InvalidArgumentException
+     */
+    private static function jsonDecode($json) {
+        try {
+            return json_decode((string) $json, true, 512, JSON_THROW_ON_ERROR);
+        } catch (\JsonException $e) {
+            throw new InvalidArgumentException('json_decode error: ' . $e->getMessage(), 0, $e);
+        }
     }
 
     /**

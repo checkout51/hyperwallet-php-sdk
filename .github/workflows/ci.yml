@@ -116,6 +116,8 @@ jobs:
           ./vendor/bin/phpunit
 
       - name: Upload coverage results to Coveralls
-        env:
-          COVERALLS_REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: ./vendor/bin/php-coveralls -v --exclude-no-stmt
+        uses: coverallsapp/github-action@v2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          file: build/logs/clover.xml
+          format: clover

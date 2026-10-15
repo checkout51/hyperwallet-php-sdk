@@ -22,7 +22,8 @@
   "require": {
     "php": "^8.2",
     "ext-json": "*",
-    "guzzlehttp/guzzle": "^7.3",
+    "guzzlehttp/guzzle": "^7.3 || ^8.0",
+    "psr/http-client": "^1.0",
     "phpseclib/phpseclib": "^3.0",
     "gree/jose": "^2.2.1"
   },
@@ -34,8 +35,7 @@
   },
   "require-dev": {
     "phpunit/phpunit": "^11.5",
-    "phake/phake": "^4.6",
-    "php-coveralls/php-coveralls": "^2.7"
+    "phake/phake": "^4.6"
   },
   "scripts": {
     "post-install-cmd": "ComposerScript\\RsaOaep256AlgorithmInstaller::install"
