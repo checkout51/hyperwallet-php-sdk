@@ -158,42 +158,24 @@ class Payment extends BaseModel implements IProgramAware {
     }
 
     /**
-     * Get the payment description
+     * Retrieves the legacy payment description.
      *
+     * @deprecated Use getNotes() instead.
      * @return string
      */
     public function getDescription() {
-        return $this->description;
+        return $this->notes;
     }
 
     /**
      * Set the payment description
-     *
+
+     * @deprecated Use setNotes(string $notes) instead.
      * @param string $description
      * @return Payment
      */
     public function setDescription($description) {
-        $this->description = $description;
-        return $this;
-    }
-
-    /**
-     * Get the payment memo
-     *
-     * @return string
-     */
-    public function getMemo() {
-        return $this->memo;
-    }
-
-    /**
-     * Set the payment memo
-     *
-     * @param string $memo
-     * @return Payment
-     */
-    public function setMemo($memo) {
-        $this->memo = $memo;
+        $this->notes = $description;
         return $this;
     }
 
@@ -214,6 +196,26 @@ class Payment extends BaseModel implements IProgramAware {
      */
     public function setNotes($notes) {
         $this->notes = $notes;
+        return $this;
+    }
+
+    /**
+     * Get the payment memo
+     *
+     * @return string
+     */
+    public function getMemo() {
+        return $this->memo;
+    }
+
+    /**
+     * Set the payment memo
+     *
+     * @param string $memo
+     * @return Payment
+     */
+    public function setMemo($memo) {
+        $this->memo = $memo;
         return $this;
     }
 

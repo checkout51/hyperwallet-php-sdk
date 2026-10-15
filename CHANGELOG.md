@@ -1,5 +1,14 @@
 ChangeLog
 =========
+2.2.7
+-------------------
+- Security fix: JWE decryption now validates the `alg`/`enc` header fields against the client's configured algorithm before decrypting, preventing an algorithm-confusion/downgrade attack where a tampered response header could force use of the legacy, Bleichenbacher-vulnerable RSA1_5 key-management algorithm.
+
+2.2.6
+-------------------
+- Added a new notes field to the Payment object, allowing users to include supplementary information or comments related to a payment.
+- Deprecated the description field from the Payment object. Please use the new notes field in its place for all future implementations.
+
 2.2.5
 -------------------
 - Added field 'accountId' to PayPal.
