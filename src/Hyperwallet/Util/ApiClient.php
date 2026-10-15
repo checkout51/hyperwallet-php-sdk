@@ -4,6 +4,7 @@ use GuzzleHttp\Client;
 use GuzzleHttp\Exception\BadResponseException;
 use GuzzleHttp\Exception\InvalidArgumentException;
 use Hyperwallet\Exception\HyperwalletApiException;
+use Hyperwallet\Exception\HyperwalletArgumentException;
 use Hyperwallet\Exception\HyperwalletException;
 use Hyperwallet\Model\BaseModel;
 use Hyperwallet\Response\ErrorResponse;
@@ -32,25 +33,11 @@ class ApiClient {
     private $client;
 
     /**
-     * The Encryption service for http client requests/responses
-     *
-     * @var HyperwalletEncryption
-     */
-    private $encryption;
-
-    /**
      * The UUID generator for http request/response
      *
      * @var HyperwalletUUID
      */
     private $uuid;
-
-    /**
-     * Boolean flag that checks if ApiClient is constructed with encryption enabled or not
-     *
-     * @var boolean
-     */
-    private $isEncrypted = false;
 
     /**
      * The throttling service for Hyperwallet client's API request limits
@@ -66,9 +53,14 @@ class ApiClient {
      * @param string $password The API password
      * @param string $server The API server to connect to
      * @param array $clientOptions Guzzle Client Options
-     * @param array $encryptionData Encryption data to initialize ApiClient with encryption enabled
+     * @param array $encryptionData No longer supported; must be empty
+     *
+     * @throws HyperwalletArgumentException
      */
     public function __construct($username, $password, $server, $clientOptions = array(), $encryptionData = array()) {
+        if (!empty($encryptionData)) {
+            throw new HyperwalletArgumentException('Payload encryption is not supported by this SDK');
+        }
         $this->uuid = HyperwalletUUID::v4();
         // Setup http client if not specified
         $this->client = new Client(array_merge_recursive(array(
@@ -81,11 +73,6 @@ class ApiClient {
                 'x-sdk-type' => 'PHP',
                 'x-sdk-contextId' => $this->uuid)
         ), $clientOptions));
-        if (!empty($encryptionData) && isset($encryptionData['clientPrivateKeySetLocation']) &&
-            isset($encryptionData['hyperwalletKeySetLocation'])) {
-            $this->isEncrypted = true;
-            $this->encryption = new HyperwalletEncryption($encryptionData['clientPrivateKeySetLocation'], $encryptionData['hyperwalletKeySetLocation']);
-        }
     }
 
     /**
@@ -165,23 +152,13 @@ class ApiClient {
                 $options['headers'] = array();
             }
             $options['headers']['Accept'] = 'application/json';
-            if ($this->isEncrypted) {
-                $options['headers']['Accept'] = 'application/jose+json';
-                $options['headers']['Content-Type'] = 'application/jose+json';
-                if (isset($options['body'])) {
-                    $options['body'] = $this->encryption->encrypt(json_decode($options['body'], true));
-                }
-            }
             $response = $this->client->request($method, $uri->expand($url, $urlParams), $options);
             $this->throttling = new HyperwalletThrottling($response->getHeaders());
             if ($response->getStatusCode() === 204) {
                 return array();
             }
             $this->checkResponseHeaderContentType($response);
-            $body = $this->isEncrypted ? self::jsonDecode(json_encode($this->encryption->decrypt($response->getBody()))) :
-                self::jsonDecode($response->getBody());
-
-            return $body;
+            return self::jsonDecode($response->getBody());
         } catch (NetworkExceptionInterface $e) {
             $errorResponse = new ErrorResponse(0, array('errors' => array(
                 array(
@@ -227,8 +204,7 @@ class ApiClient {
      */
     private function checkResponseHeaderContentType($response) {
         $contentType = implode('', $response->getHeader('Content-Type'));
-        $expectedContentType = $this->isEncrypted ? 'application/jose+json' : 'application/json';
-        $invalidContentType = $response->getStatusCode() !== 204 && !empty($contentType) && strpos($contentType, $expectedContentType) === false;
+        $invalidContentType = $response->getStatusCode() !== 204 && !empty($contentType) && strpos($contentType, 'application/json') === false;
         if ($invalidContentType) {
              throw new HyperwalletException('Invalid Content-Type specified in Response Header');
         }
