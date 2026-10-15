@@ -2,6 +2,7 @@
 namespace Hyperwallet\Tests\Model;
 
 use Hyperwallet\Model\BaseModel;
+use PHPUnit\Framework\Attributes\Depends;
 
 class BaseModelTest extends \PHPUnit\Framework\TestCase {
 
@@ -17,9 +18,7 @@ class BaseModelTest extends \PHPUnit\Framework\TestCase {
         $this->assertNull($model->test3);
     }
 
-    /**
-     * @depends testMagicGetter
-     */
+    #[Depends('testMagicGetter')]
     public function testMagicSetter() {
         $data = array(
             'test' => 'value',

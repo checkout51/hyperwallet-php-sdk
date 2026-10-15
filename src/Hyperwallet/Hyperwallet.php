@@ -1636,7 +1636,7 @@ class Hyperwallet {
      * @throws HyperwalletArgumentException
      * @throws HyperwalletApiException
      */
-    public function createTransferMethod($userToken, $jsonCacheToken, TransferMethod $transferMethod = null) {
+    public function createTransferMethod($userToken, $jsonCacheToken, ?TransferMethod $transferMethod = null) {
         if (empty($userToken)) {
             throw new HyperwalletArgumentException('userToken is required!');
         }

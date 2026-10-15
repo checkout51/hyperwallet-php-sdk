@@ -33,6 +33,7 @@ use Hyperwallet\Model\VenmoAccountStatusTransition;
 use Hyperwallet\Response\ErrorResponse;
 use Hyperwallet\Util\ApiClient;
 use Hyperwallet\Util\HyperwalletUUID;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 class HyperwalletTest extends \PHPUnit\Framework\TestCase {
 
@@ -1897,10 +1898,9 @@ class HyperwalletTest extends \PHPUnit\Framework\TestCase {
     }
 
     /**
-     * @dataProvider prepaidCardStatusTransitionProvider
-     *
      * @param string $methodName The status transition method name
      */
+    #[DataProvider('prepaidCardStatusTransitionProvider')]
     public function testStatusTransitionMethods_noUserToken($methodName) {
         // Setup
         $client = new Hyperwallet('test-username', 'test-password');
@@ -1916,10 +1916,9 @@ class HyperwalletTest extends \PHPUnit\Framework\TestCase {
     }
 
     /**
-     * @dataProvider prepaidCardStatusTransitionProvider
-     *
      * @param string $methodName The status transition method name
      */
+    #[DataProvider('prepaidCardStatusTransitionProvider')]
     public function testPrepaidCardStatusTransitionMethods_noPrepaidCardToken($methodName) {
         // Setup
         $client = new Hyperwallet('test-username', 'test-password');
@@ -1935,11 +1934,10 @@ class HyperwalletTest extends \PHPUnit\Framework\TestCase {
     }
 
     /**
-     * @dataProvider prepaidCardStatusTransitionProvider
-     *
      * @param string $methodName The status transition method name
      * @param string $transition The status transition to perform
      */
+    #[DataProvider('prepaidCardStatusTransitionProvider')]
     public function testPrepaidCardStatusTransitionMethods_allParameters($methodName, $transition) {
         // Setup
         $client = new Hyperwallet('test-username', 'test-password');
@@ -4182,13 +4180,11 @@ class HyperwalletTest extends \PHPUnit\Framework\TestCase {
         $clientClazz = new \ReflectionObject($client);
         $apiClientProperty = $clientClazz->getProperty('client');
 
-        $apiClientProperty->setAccessible(true);
         $apiClient = $apiClientProperty->getValue($client);
 
         $apiClientClazz = new \ReflectionObject($apiClient);
         $guzzleClientProperty = $apiClientClazz->getProperty('client');
 
-        $guzzleClientProperty->setAccessible(true);
         /** @var Client $guzzleClient */
         $guzzleClient = $guzzleClientProperty->getValue($apiClient);
 
@@ -4203,7 +4199,6 @@ class HyperwalletTest extends \PHPUnit\Framework\TestCase {
         $clientClazz = new \ReflectionObject($client);
         $apiClientProperty = $clientClazz->getProperty('client');
 
-        $apiClientProperty->setAccessible(true);
         $apiClientProperty->setValue($client, $apiClientMock);
 
         return $apiClientMock;
@@ -4213,7 +4208,7 @@ class HyperwalletTest extends \PHPUnit\Framework\TestCase {
     // Data provider
     //--------------------------------------
 
-    public function prepaidCardStatusTransitionProvider() {
+    public static function prepaidCardStatusTransitionProvider() {
         return array(
             'suspendPrepaidCard' => array('suspendPrepaidCard', PrepaidCardStatusTransition::TRANSITION_SUSPENDED),
             'unsuspendPrepaidCard' => array('unsuspendPrepaidCard', PrepaidCardStatusTransition::TRANSITION_UNSUSPENDED),
