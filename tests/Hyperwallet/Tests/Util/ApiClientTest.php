@@ -9,10 +9,10 @@ use GuzzleHttp\Middleware;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
 use Hyperwallet\Exception\HyperwalletApiException;
+use Hyperwallet\Exception\HyperwalletArgumentException;
 use Hyperwallet\Exception\HyperwalletException;
 use Hyperwallet\Model\BaseModel;
 use Hyperwallet\Util\ApiClient;
-use Hyperwallet\Util\HyperwalletEncryption;
 
 class ApiClientTest extends \PHPUnit\Framework\TestCase {
 
@@ -25,6 +25,18 @@ class ApiClientTest extends \PHPUnit\Framework\TestCase {
      * @var ApiClient
      */
     private $apiClient;
+
+    public function testConstructor_throw_exception_when_encryption_data_is_provided() {
+        try {
+            new ApiClient('test-username', 'test-password', 'http://test.server', array(), array(
+                'clientPrivateKeySetLocation' => 'private-jwkset',
+                'hyperwalletKeySetLocation' => 'public-jwkset'
+            ));
+            $this->fail('HyperwalletArgumentException expected');
+        } catch (HyperwalletArgumentException $e) {
+            $this->assertEquals('Payload encryption is not supported by this SDK', $e->getMessage());
+        }
+    }
 
     public function testDoPost_return_response_with_query() {
         // Setup data
@@ -45,128 +57,6 @@ class ApiClientTest extends \PHPUnit\Framework\TestCase {
 
         // Validate api request
         $this->validateRequest('POST', '/test', 'test=true', array('test2' => 'value2'), true);
-    }
-
-    public function testDoPost_with_encryption_successful() {
-        // Setup data
-        $clientPath = __DIR__ . "/../../../resources/private-jwkset1";
-        $hyperwalletPath = __DIR__ . "/../../../resources/public-jwkset1";
-        $originalMessage = array('test2' => 'value2');
-        $encryption = new HyperwalletEncryption($clientPath, $hyperwalletPath);
-        $encryptedMessage = $encryption->encrypt($originalMessage);
-
-        // Execute test
-        $mockHandler = new MockHandler(array(
-            new Response(200, array('Content-Type' => 'application/jose+json'), $encryptedMessage)
-        ));
-        $this->createApiClientWithEncryption($mockHandler);
-
-        $model = new BaseModel(array(), $originalMessage);
-
-        // Execute test
-        $data = $this->apiClient->doPost('/test', array(), $model, array('test' => 'true'));
-        $this->assertEquals($originalMessage, $data);
-
-        // Validate api request
-        $this->validateRequest('POST', '/test', 'test=true', array('test2' => 'value2'), true, array(), true);
-    }
-
-    public function testDoPost_with_encryption_return_response_204_status() {
-        // Setup data
-        $clientPath = __DIR__ . "/../../../resources/private-jwkset1";
-        $hyperwalletPath = __DIR__ . "/../../../resources/public-jwkset1";
-        $originalMessage = array('test2' => 'value2');
-        $encryption = new HyperwalletEncryption($clientPath, $hyperwalletPath);
-        $encryptedMessage = $encryption->encrypt($originalMessage);
-
-        // Execute test
-        $mockHandler = new MockHandler(array(
-            new Response(204)
-        ));
-        $this->createApiClientWithEncryption($mockHandler);
-
-        $model = new BaseModel(array(), $originalMessage);
-
-        // Execute test
-        $data = $this->apiClient->doPost('/test', array(), null, array());
-        $this->assertEquals(array(), $data);
-
-        // Validate api request
-        $this->validateRequest('POST', '/test', '', array(), true, array(), true);
-    }
-
-    public function testDoPost_with_encryption_charset_in_content_type() {
-        // Setup data
-        $clientPath = __DIR__ . "/../../../resources/private-jwkset1";
-        $hyperwalletPath = __DIR__ . "/../../../resources/public-jwkset1";
-        $originalMessage = array('test2' => 'value2');
-        $encryption = new HyperwalletEncryption($clientPath, $hyperwalletPath);
-        $encryptedMessage = $encryption->encrypt($originalMessage);
-
-        // Execute test
-        $mockHandler = new MockHandler(array(
-            new Response(200, array('Content-Type' => 'application/jose+json;charset=utf-8'), $encryptedMessage)
-        ));
-        $this->createApiClientWithEncryption($mockHandler);
-
-        $model = new BaseModel(array(), $originalMessage);
-
-        // Execute test
-        $data = $this->apiClient->doPost('/test', array(), $model, array('test' => 'true'));
-        $this->assertEquals($originalMessage, $data);
-
-        // Validate api request
-        $this->validateRequest('POST', '/test', 'test=true', array('test2' => 'value2'), true, array(), true);
-    }
-
-    public function testDoPost_with_encryption_charset_in_content_type_ahead() {
-        // Setup data
-        $clientPath = __DIR__ . "/../../../resources/private-jwkset1";
-        $hyperwalletPath = __DIR__ . "/../../../resources/public-jwkset1";
-        $originalMessage = array('test2' => 'value2');
-        $encryption = new HyperwalletEncryption($clientPath, $hyperwalletPath);
-        $encryptedMessage = $encryption->encrypt($originalMessage);
-
-        // Execute test
-        $mockHandler = new MockHandler(array(
-            new Response(200, array('Content-Type' => 'charset=utf-8;application/jose+json'), $encryptedMessage)
-        ));
-        $this->createApiClientWithEncryption($mockHandler);
-
-        $model = new BaseModel(array(), $originalMessage);
-
-        // Execute test
-        $data = $this->apiClient->doPost('/test', array(), $model, array('test' => 'true'));
-        $this->assertEquals($originalMessage, $data);
-
-        // Validate api request
-        $this->validateRequest('POST', '/test', 'test=true', array('test2' => 'value2'), true, array(), true);
-    }
-
-    public function testDoPost_with_encryption_throw_exception_when_response_has_wrong_content_type_header() {
-        // Setup data
-        $clientPath = __DIR__ . "/../../../resources/private-jwkset1";
-        $hyperwalletPath = __DIR__ . "/../../../resources/public-jwkset1";
-        $originalMessage = array('test2' => 'value2');
-        $encryption = new HyperwalletEncryption($clientPath, $hyperwalletPath);
-        $encryptedMessage = $encryption->encrypt($originalMessage);
-        $mockHandler = new MockHandler(array(
-            new Response(200, array('Content-Type' => 'wrongContentType'), $encryptedMessage)
-        ));
-        $this->createApiClientWithEncryption($mockHandler);
-
-        $model = new BaseModel(array(), $originalMessage);
-
-        // Execute test
-        try {
-            $this->apiClient->doPost('/test', array(), $model, array('test' => 'true'));
-            $this->fail('HyperwalletException expected');
-        } catch (HyperwalletException $e) {
-            $this->assertEquals('Invalid Content-Type specified in Response Header', $e->getMessage());
-        }
-
-        // Validate api request
-        $this->validateRequest('POST', '/test', 'test=true', array('test2' => 'value2'), true, array(), true);
     }
 
     public function testDoPost_return_response_with_query_and_header_content_type_with_charset_substring() {
@@ -947,7 +837,7 @@ class ApiClientTest extends \PHPUnit\Framework\TestCase {
     }
 
 
-    private function validateRequest($method, $path, $query, array $body, $hasContentType, array $headers = array(), $isEncrypted = false) {
+    private function validateRequest($method, $path, $query, array $body, $hasContentType, array $headers = array()) {
         // Validate api request
         $this->assertCount(1, $this->container);
 
@@ -956,9 +846,9 @@ class ApiClientTest extends \PHPUnit\Framework\TestCase {
         $this->assertEquals($method, $request->getMethod());
 
         $this->assertCount(($hasContentType ? 9 : 7) + count($headers), $request->getHeaders());
-        $this->assertArrayHasKeyAndValue('Accept', $isEncrypted ? 'application/jose+json' : 'application/json', $request->getHeaders());
+        $this->assertArrayHasKeyAndValue('Accept', 'application/json', $request->getHeaders());
         if ($hasContentType) {
-            $this->assertArrayHasKeyAndValue('Content-Type', $isEncrypted ? 'application/jose+json' : 'application/json', $request->getHeaders());
+            $this->assertArrayHasKeyAndValue('Content-Type', 'application/json', $request->getHeaders());
             $this->assertArrayHasKeyAndValue('Content-Length', $request->getBody()->getSize(), $request->getHeaders());
         }
         $this->assertArrayHasKeyAndValue('User-Agent', 'Hyperwallet PHP SDK v' . ApiClient::VERSION, $request->getHeaders());
@@ -973,7 +863,7 @@ class ApiClientTest extends \PHPUnit\Framework\TestCase {
         $this->assertEquals($path, $request->getUri()->getPath());
         $this->assertEquals($query, $request->getUri()->getQuery());
 
-        if ($hasContentType && !$isEncrypted) {
+        if ($hasContentType) {
             $data = $request->getBody()->__toString();
 
             $this->assertJson($data);
@@ -991,22 +881,6 @@ class ApiClientTest extends \PHPUnit\Framework\TestCase {
         $this->apiClient = new ApiClient('test-username', 'test-password', 'http://test.server', array(
             'handler' => $stack
         ));
-    }
-
-    private function createApiClientWithEncryption(MockHandler $mockHandler) {
-        $this->container = array();
-        $history = Middleware::history($this->container);
-
-        $stack = HandlerStack::create($mockHandler);
-        $stack->push($history);
-
-        $clientPath = __DIR__ . "/../../../resources/private-jwkset1";
-        $hyperwalletPath = __DIR__ . "/../../../resources/public-jwkset1";
-        $this->apiClient = new ApiClient('test-username', 'test-password', 'http://test.server',
-            array('handler' => $stack), array(
-                'clientPrivateKeySetLocation' => $clientPath,
-                'hyperwalletKeySetLocation' => $hyperwalletPath
-            ));
     }
 
     private function assertArrayHasKeyAndValue($expectedKey, $expectedValue, array $actual) {

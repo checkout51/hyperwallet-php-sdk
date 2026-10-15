@@ -77,7 +77,7 @@ class Hyperwallet {
      * @param string $password The API password
      * @param string|null $programToken The program token that is used for some API calls
      * @param string $server The API server to connect to
-     * @param array $encryptionData Encryption data to initialize ApiClient with encryption enabled
+     * @param array $encryptionData No longer supported; must be empty
      * @param array $clientOptions Guzzle Client Options
      *
      * @throws HyperwalletArgumentException
