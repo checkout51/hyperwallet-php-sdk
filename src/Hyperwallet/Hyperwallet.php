@@ -1647,7 +1647,7 @@ class Hyperwallet {
             'version' => $this->version,
             'user-token' => $userToken
         ), $transferMethod, array(), array(
-            'Json-Cache-Token' => $jsonCacheToken
+            'Json-Cache-Token' => (string) $jsonCacheToken
         ));
         if ($body['type'] === PrepaidCard::TYPE_PREPAID_CARD) {
             return new PrepaidCard($body);

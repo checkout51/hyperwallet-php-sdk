@@ -2,6 +2,7 @@
 namespace Hyperwallet\Tests\Util;
 
 use GuzzleHttp\Exception\ConnectException;
+use GuzzleHttp\Exception\NetworkTimeoutException;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Middleware;
@@ -28,7 +29,7 @@ class ApiClientTest extends \PHPUnit\Framework\TestCase {
     public function testDoPost_return_response_with_query() {
         // Setup data
         $mockHandler = new MockHandler(array(
-            new Response(200, array('Content-Type' => 'application/json'), \GuzzleHttp\json_encode(array(
+            new Response(200, array('Content-Type' => 'application/json'), json_encode(array(
                 'test' => 'value',
                 'links' => 'linksValue'
             )))
@@ -171,7 +172,7 @@ class ApiClientTest extends \PHPUnit\Framework\TestCase {
     public function testDoPost_return_response_with_query_and_header_content_type_with_charset_substring() {
         // Setup data
         $mockHandler = new MockHandler(array(
-            new Response(200, array('Content-Type' => 'application/json;charset=utf-8'), \GuzzleHttp\json_encode(array(
+            new Response(200, array('Content-Type' => 'application/json;charset=utf-8'), json_encode(array(
                 'test' => 'value',
                 'links' => 'linksValue'
             )))
@@ -192,7 +193,7 @@ class ApiClientTest extends \PHPUnit\Framework\TestCase {
     public function testDoPost_return_response_with_query_and_header_content_type_with_charset_substring_ahead() {
         // Setup data
         $mockHandler = new MockHandler(array(
-            new Response(200, array('Content-Type' => 'charset=utf-8;application/json'), \GuzzleHttp\json_encode(array(
+            new Response(200, array('Content-Type' => 'charset=utf-8;application/json'), json_encode(array(
                 'test' => 'value',
                 'links' => 'linksValue'
             )))
@@ -213,7 +214,7 @@ class ApiClientTest extends \PHPUnit\Framework\TestCase {
     public function testDoPost_return_response_without_query() {
         // Setup data
         $mockHandler = new MockHandler(array(
-            new Response(200, array('Content-Type' => 'application/json'), \GuzzleHttp\json_encode(array(
+            new Response(200, array('Content-Type' => 'application/json'), json_encode(array(
                 'test' => 'value',
                 'links' => 'linksValue'
             )))
@@ -234,7 +235,7 @@ class ApiClientTest extends \PHPUnit\Framework\TestCase {
     public function testDoPost_return_response_without_data() {
         // Setup data
         $mockHandler = new MockHandler(array(
-            new Response(200, array('Content-Type' => 'application/json'), \GuzzleHttp\json_encode(array(
+            new Response(200, array('Content-Type' => 'application/json'), json_encode(array(
                 'test' => 'value',
                 'links' => 'linksValue'
             )))
@@ -253,7 +254,7 @@ class ApiClientTest extends \PHPUnit\Framework\TestCase {
     public function testDoPost_return_response_with_headers() {
         // Setup data
         $mockHandler = new MockHandler(array(
-            new Response(200, array('Content-Type' => 'application/json'), \GuzzleHttp\json_encode(array(
+            new Response(200, array('Content-Type' => 'application/json'), json_encode(array(
                 'test' => 'value',
                 'links' => 'linksValue'
             )))
@@ -274,7 +275,7 @@ class ApiClientTest extends \PHPUnit\Framework\TestCase {
     public function testDoPost_return_response_with_path_placeholder() {
         // Setup data
         $mockHandler = new MockHandler(array(
-            new Response(200, array('Content-Type' => 'application/json'), \GuzzleHttp\json_encode(array(
+            new Response(200, array('Content-Type' => 'application/json'), json_encode(array(
                 'test' => 'value',
                 'links' => 'linksValue'
             )))
@@ -295,7 +296,7 @@ class ApiClientTest extends \PHPUnit\Framework\TestCase {
     public function testDoPost_throw_exception_when_response_has_wrong_content_type_header() {
         // Setup data
         $mockHandler = new MockHandler(array(
-            new Response(200, array('Content-Type' => 'wrongContentType'), \GuzzleHttp\json_encode(array(
+            new Response(200, array('Content-Type' => 'wrongContentType'), json_encode(array(
                 'test' => 'value',
                 'links' => 'linksValue'
             )))
@@ -359,10 +360,35 @@ class ApiClientTest extends \PHPUnit\Framework\TestCase {
         $this->validateRequest('POST', '/test', '', array('test2' => 'value2'), true);
     }
 
+    public function testDoPost_throw_exception_network_timeout() {
+        if (!class_exists(NetworkTimeoutException::class)) {
+            $this->markTestSkipped('NetworkTimeoutException requires Guzzle 8');
+        }
+
+        // Setup data
+        $mockHandler = new MockHandler(array(
+            new NetworkTimeoutException('Operation timed out', new Request('POST', 'test'))
+        ));
+        $this->createApiClient($mockHandler);
+
+        $model = new BaseModel(array(), array('test2' => 'value2'));
+
+        // Execute test
+        try {
+            $this->apiClient->doPost('/test', array(), $model, array());
+            $this->fail('HyperwalletApiException expected');
+        } catch (HyperwalletApiException $e) {
+            $this->assertEquals('Could not communicate with http://test.server', $e->getMessage());
+            $this->assertEquals(0, $e->getErrorResponse()->getStatusCode());
+            $this->assertEquals('COMMUNICATION_ERROR', $e->getErrorResponse()->getErrors()[0]->getCode());
+            $this->assertInstanceOf(NetworkTimeoutException::class, $e->getPrevious());
+        }
+    }
+
     public function testDoPost_throw_exception_bad_request() {
         // Setup data
         $mockHandler = new MockHandler(array(
-            new Response(400, array(), \GuzzleHttp\json_encode(array(
+            new Response(400, array(), json_encode(array(
                 'errors' => array(
                     array(
                         'fieldName' => 'testField',
@@ -413,7 +439,7 @@ class ApiClientTest extends \PHPUnit\Framework\TestCase {
     public function testDoPost_throw_exception_server_error() {
         // Setup data
         $mockHandler = new MockHandler(array(
-            new Response(500, array(), \GuzzleHttp\json_encode(array(
+            new Response(500, array(), json_encode(array(
                 'errors' => array(
                     array(
                         'fieldName' => 'testField',
@@ -465,7 +491,7 @@ class ApiClientTest extends \PHPUnit\Framework\TestCase {
     public function testDoPut_return_response_only_submit_updated_field() {
         // Setup data
         $mockHandler = new MockHandler(array(
-            new Response(200, array('Content-Type' => 'application/json'), \GuzzleHttp\json_encode(array(
+            new Response(200, array('Content-Type' => 'application/json'), json_encode(array(
                 'test' => 'value',
                 'links' => 'linksValue'
             )))
@@ -486,7 +512,7 @@ class ApiClientTest extends \PHPUnit\Framework\TestCase {
     public function testDoPut_return_response_with_query() {
         // Setup data
         $mockHandler = new MockHandler(array(
-            new Response(200, array('Content-Type' => 'application/json'), \GuzzleHttp\json_encode(array(
+            new Response(200, array('Content-Type' => 'application/json'), json_encode(array(
                 'test' => 'value',
                 'links' => 'linksValue'
             )))
@@ -508,7 +534,7 @@ class ApiClientTest extends \PHPUnit\Framework\TestCase {
     public function testDoPut_return_response_without_query() {
         // Setup data
         $mockHandler = new MockHandler(array(
-            new Response(200, array('Content-Type' => 'application/json'), \GuzzleHttp\json_encode(array(
+            new Response(200, array('Content-Type' => 'application/json'), json_encode(array(
                 'test' => 'value',
                 'links' => 'linksValue'
             )))
@@ -530,7 +556,7 @@ class ApiClientTest extends \PHPUnit\Framework\TestCase {
     public function testDoPut_return_response_with_path_placeholder() {
         // Setup data
         $mockHandler = new MockHandler(array(
-            new Response(200, array('Content-Type' => 'application/json'), \GuzzleHttp\json_encode(array(
+            new Response(200, array('Content-Type' => 'application/json'), json_encode(array(
                 'test' => 'value',
                 'links' => 'linksValue'
             )))
@@ -598,7 +624,7 @@ class ApiClientTest extends \PHPUnit\Framework\TestCase {
     public function testDoPut_throw_exception_bad_request() {
         // Setup data
         $mockHandler = new MockHandler(array(
-            new Response(400, array(), \GuzzleHttp\json_encode(array(
+            new Response(400, array(), json_encode(array(
                 'errors' => array(
                     array(
                         'fieldName' => 'testField',
@@ -650,7 +676,7 @@ class ApiClientTest extends \PHPUnit\Framework\TestCase {
     public function testDoPut_throw_exception_server_error() {
         // Setup data
         $mockHandler = new MockHandler(array(
-            new Response(500, array(), \GuzzleHttp\json_encode(array(
+            new Response(500, array(), json_encode(array(
                 'errors' => array(
                     array(
                         'fieldName' => 'testField',
@@ -703,7 +729,7 @@ class ApiClientTest extends \PHPUnit\Framework\TestCase {
     public function testDoGet_return_response_with_query() {
         // Setup data
         $mockHandler = new MockHandler(array(
-            new Response(200, array('Content-Type' => 'application/json'), \GuzzleHttp\json_encode(array(
+            new Response(200, array('Content-Type' => 'application/json'), json_encode(array(
                 'test' => 'value',
                 'links' => 'linksValue'
             )))
@@ -722,7 +748,7 @@ class ApiClientTest extends \PHPUnit\Framework\TestCase {
     public function testDoGet_return_response_without_query() {
         // Setup data
         $mockHandler = new MockHandler(array(
-            new Response(200, array('Content-Type' => 'application/json'), \GuzzleHttp\json_encode(array(
+            new Response(200, array('Content-Type' => 'application/json'), json_encode(array(
                 'test' => 'value',
                 'links' => 'linksValue'
             )))
@@ -756,7 +782,7 @@ class ApiClientTest extends \PHPUnit\Framework\TestCase {
     public function testDoGet_return_response_with_path_placeholder() {
         // Setup data
         $mockHandler = new MockHandler(array(
-            new Response(200, array('Content-Type' => 'application/json'), \GuzzleHttp\json_encode(array(
+            new Response(200, array('Content-Type' => 'application/json'), json_encode(array(
                 'test' => 'value',
                 'links' => 'linksValue'
             )))
@@ -801,7 +827,7 @@ class ApiClientTest extends \PHPUnit\Framework\TestCase {
     public function testDoGet_throw_exception_bad_request() {
         // Setup data
         $mockHandler = new MockHandler(array(
-            new Response(400, array(), \GuzzleHttp\json_encode(array(
+            new Response(400, array(), json_encode(array(
                 'errors' => array(
                     array(
                         'fieldName' => 'testField',
@@ -850,7 +876,7 @@ class ApiClientTest extends \PHPUnit\Framework\TestCase {
     public function testDoGet_throw_exception_server_error() {
         // Setup data
         $mockHandler = new MockHandler(array(
-            new Response(500, array(), \GuzzleHttp\json_encode(array(
+            new Response(500, array(), json_encode(array(
                 'errors' => array(
                     array(
                         'fieldName' => 'testField',
@@ -899,7 +925,7 @@ class ApiClientTest extends \PHPUnit\Framework\TestCase {
     public function testDoGet_throw_exception_bad_request_with_empty_response() {
         // Setup data
         $mockHandler = new MockHandler(array(
-            new Response(400, array(), \GuzzleHttp\json_encode(array('errors' => array())))
+            new Response(400, array(), json_encode(array('errors' => array())))
         ));
         $this->createApiClient($mockHandler);
 
@@ -951,7 +977,7 @@ class ApiClientTest extends \PHPUnit\Framework\TestCase {
             $data = $request->getBody()->__toString();
 
             $this->assertJson($data);
-            $this->assertJsonStringEqualsJsonString(\GuzzleHttp\json_encode($body, JSON_FORCE_OBJECT), $data);
+            $this->assertJsonStringEqualsJsonString(json_encode($body, JSON_FORCE_OBJECT), $data);
         }
     }
 
